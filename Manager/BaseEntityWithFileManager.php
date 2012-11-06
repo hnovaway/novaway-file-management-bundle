@@ -155,6 +155,18 @@ class BaseEntityWithFileManager
     }
 
     /**
+    * Tells if an entity is new
+    *
+    * @param   mixed   $entity The entity to test
+    * @return  boolean TRUE if new, FALSE otherwise
+    */
+    public function isNew(BaseEntityWithFile $entity)
+    {
+       $state = $this->entityManager->getUnitOfWork()->getEntityState($entity);
+       return $state === \Doctrine\ORM\UnitOfWork::STATE_NEW;
+    }
+
+    /**
      * Remove and flush the entity
      *
      * @param   BaseEntityWithFile $entity The entity to delete
@@ -230,6 +242,9 @@ class BaseEntityWithFileManager
     protected function buildDestination(BaseEntityWithFile $entity, $propertyName, $sourceFilepath = null)
     {
         $propertyGetter = $this->getter($propertyName);
+        if($this->isNew($entity)){
+            $this->save($entity);
+        }
 
         if($sourceFilepath) {
             $arrReplacement =  array(
@@ -364,7 +379,7 @@ class BaseEntityWithFileManager
      *
      * @return BaseEntityWithFile               The saved entity
      */
-    public function removeFiles(BaseEntityWithFile $entity, $properties = array(), $doEraseFiles = true, $doSave = true)
+    public function removeFiles(BaseEntityWithFile $entity, $properties = array(), $doEraseFiles = true, $doSave = true, $doSetToNull = true)
     {
         if(!is_array($properties)) {
             if(is_string($properties)){
@@ -380,12 +395,15 @@ class BaseEntityWithFileManager
 
         foreach ($properties as $propertyName) {
             $path = $this->getFileAbsolutePath($entity, $propertyName);
+            var_dump($path);
             if ($path) {
                 if($doEraseFiles && is_file($path)){
                     unlink($path);
                 }
-                $setter = $this->setter($propertyName, true);
-                $entity->$setter(null);
+                if($doSetToNull){
+                    $setter = $this->setter($propertyName, true);
+                    $entity->$setter(null);
+                }
             }
         }
 

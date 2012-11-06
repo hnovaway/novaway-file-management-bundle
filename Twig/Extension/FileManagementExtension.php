@@ -26,19 +26,20 @@ class FileManagementExtension extends \Twig_Extension
         );
     }
 
-    public function filepath($entity, $propertyName)
+    public function filepath($entity, $propertyName, $webDirectory = null)
     {
         //TODO : Gestion de l'absence de la propriété
         $getter = 'get'.ucfirst($propertyName).'Filename';
         if(!$entity->$getter()){
             return null;
         }
-        return $this->webDirectory.$entity->$getter();
+        $webDirectory = $webDirectory ? $webDirectory : $this->webDirectory;
+        return $webDirectory.$entity->$getter();
     }
 
-    public function imagepath($entity, $propertyName, $format)
+    public function imagepath($entity, $propertyName, $format, $webDirectory = null)
     {
-        $pathTemplate = $this->filepath($entity, $propertyName);
+        $pathTemplate = $this->filepath($entity, $propertyName, $webDirectory);
         return str_replace('{-imgformat-}', $format, $pathTemplate);
     }
 
