@@ -395,7 +395,6 @@ class BaseEntityWithFileManager
 
         foreach ($properties as $propertyName) {
             $path = $this->getFileAbsolutePath($entity, $propertyName);
-            var_dump($path);
             if ($path) {
                 if($doEraseFiles && is_file($path)){
                     unlink($path);
