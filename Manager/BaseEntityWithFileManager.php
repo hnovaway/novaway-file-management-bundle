@@ -431,7 +431,10 @@ class BaseEntityWithFileManager
         if (is_file($sourceFilepath)) {
 
             $oldDestPath = $this->getFileAbsolutePath($entity, $propertyName);
-            if(is_file($oldDestPath)) {
+            $oldDestPath = $this->pathRemoveDotSegment($oldDestPath);
+            $sourceFilepath = $this->pathRemoveDotSegment($sourceFilepath);
+
+            if(is_file($oldDestPath) && $oldDestPath != $sourceFilepath) {
                 unlink($oldDestPath);
             }
 
@@ -456,6 +459,35 @@ class BaseEntityWithFileManager
         }
 
         return null;
+    }
+
+    /**
+     * Cleans a path by removing dot segments
+     * @param  string $path The path
+     * @return string       The cleaned path
+     */
+    protected function pathRemoveDotSegment($path)
+    {
+        // multi-byte character explode
+        $inSegs  = preg_split( '!/!u', $path );
+        $outSegs = array( );
+        foreach ( $inSegs as $seg )
+        {
+            if ( $seg == '' || $seg == '.')
+                continue;
+            if ( $seg == '..' )
+                array_pop( $outSegs );
+            else
+                array_push( $outSegs, $seg );
+        }
+        $outPath = implode( '/', $outSegs );
+        if ( $path[0] == '/' )
+            $outPath = '/' . $outPath;
+        // compare last multi-byte character against '/'
+        if ( $outPath != '/' &&
+            (mb_strlen($path)-1) == mb_strrpos( $path, '/', 'UTF-8' ) )
+            $outPath .= '/';
+        return $outPath;
     }
 
 }
